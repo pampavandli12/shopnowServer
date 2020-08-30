@@ -5,7 +5,6 @@ const authToken = process.env.AUTH_TOKEN;
 const adminNumber = process.env.ADMIN_NUMBER;
 const client = require("twilio")(accountSid, authToken);
 
-console.log("authToken", authToken);
 module.exports = (app) => {
   app.get("/admin/verification", (req, res) => {
     const OTP = Math.floor(100000 + Math.random() * 900000);

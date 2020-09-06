@@ -7,6 +7,7 @@ require("dotenv").config();
 // Require controllers
 const AdminController = require("./controllers/admin");
 const User = require("./controllers/user");
+const GetToken = require("./controllers/token");
 
 const app = express();
 app.use(express.json());
@@ -15,7 +16,7 @@ app.use(express.urlencoded({ extended: false }));
 const port = process.env.PORT || 3000;
 
 // DB Connections
-mongoose.connect(process.env.MONGODBDEV_URL, (err) => {
+mongoose.connect(process.env.MONGODB_URL, (err) => {
   if (!err) {
     throw err;
   }
@@ -27,5 +28,6 @@ app.get("/", (req, res) => {
 });
 app.use("/user", User);
 app.use("/admin", AdminController);
+app.use("/auth", GetToken);
 
 app.listen(port, () => console.log(`App is listening ap port: ${port}`));

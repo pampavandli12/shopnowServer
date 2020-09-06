@@ -1,10 +1,3 @@
-/* =================== .env Variables ====================== */
-const phoneNumber = process.env.PHONE_NUMBER;
-const accountSid = process.env.ACCOUNT_SID;
-const authToken = process.env.AUTH_TOKEN;
-const adminNumber = process.env.ADMIN_NUMBER;
-
-const client = require("twilio")(accountSid, authToken);
 const express = require("express");
 const Router = express.Router();
 
@@ -14,21 +7,9 @@ const RefreshToken = require("../models/RefreshToken");
 
 /* ================== IMPORT CUSTOM MODULES =================== */
 const util = require("../utils/auth");
+const sendOtpToMobile = require("../utils/otpsender").sendOtpToMobile;
 
-Router.get("/verification", (req, res) => {
-  const OTP = Math.floor(100000 + Math.random() * 900000);
-  client.messages
-    .create({
-      body: `This is the OTP for admin from shopnow: ${OTP}`,
-      from: phoneNumber,
-      to: adminNumber,
-    })
-    .then((message) => {
-      console.log(message);
-      res.send("OTP send successfully");
-    })
-    .catch((err) => console.log(err));
-});
+/* =================== SIGNIN ENDPOINT ============================ */
 Router.post("/signin", async (req, res) => {
   const email = req.body.email;
   try {
@@ -56,14 +37,18 @@ Router.post("/signin", async (req, res) => {
     throw error;
   }
 });
+
+/* =================== TEST JWT ENDPOINT =============================== */
 Router.post("/check", util.validateToken, (req, res) => {
   res.status(200).send("Token is valid");
 });
+
+/* ================= CREATE ADMIN END POINT ======================= */
 /* Router.post("/createAdmin", async (req, res) => {
-  const hashedPasswerd = await hashPassword(req.body.password);
+  const hashedPassword = await hashPassword(req.body.password);
   const admin = new Admin({
     email: req.body.email,
-    password: hashedPasswerd,
+    password: hashedPassword,
     isAdmin: true,
     OTP: null,
   });
@@ -79,14 +64,43 @@ Router.post("/check", util.validateToken, (req, res) => {
     res.send("something went wrong");
   }
 }); */
-Router.post("/verifyotp", async (req, res) => {
-  const reqOtp = req.body.otp;
+
+/* ===================== SEND OTP END POINT ==================== */
+Router.get("/verification", async (req, res) => {
+  const OTP = Math.floor(100000 + Math.random() * 900000);
   try {
-    const admin = await Admin.findOne();
-    console.log(admin);
+    const message = await sendOtpToMobile(OTP);
+    if (message) {
+      res
+        .status(200)
+        .send("OTP send succefssfully, it will be valid for 30 minutes");
+      await Admin.updateOne({ email: process.env.ADMIN_EMAIL }, { OTP: OTP });
+      setTimeout(async () => {
+        await Admin.updateOne(
+          { email: process.env.ADMIN_EMAIL },
+          { OTP: null }
+        );
+      }, 3000000);
+    } else {
+      res.status(500).send("something went wrong, plaese try again");
+    }
+  } catch (error) {
+    res.status(500).send("Something went wrong, please try again");
+  }
+});
+
+/* ================ AUTHENTICATE OTP AND PASSWORD MIDDLEWARE =================== */
+const authenticateOTP = async (req, res, next) => {
+  const reqOtp = req.body.reqOtp;
+  try {
+    const admin = await Admin.findOne({ email: process.env.ADMIN_EMAIL });
     if (admin) {
       if (admin.OTP === reqOtp) {
-        res.status(200).send("OTP verified successfully");
+        if (await util.comparePassword(req.body.password, admin.password)) {
+          res.status(400).send("You can not set previous password");
+        } else {
+          next();
+        }
       } else {
         res.status(401).send("OTP is invalid");
       }
@@ -96,18 +110,25 @@ Router.post("/verifyotp", async (req, res) => {
   } catch (error) {
     console.log(error);
   }
-});
-Router.post("/resetpassword", async (req, res) => {
+};
+
+/* =================== RESET PASSWORD END POINT ====================== */
+Router.post("/resetpassword", authenticateOTP, async (req, res) => {
   const newPassword = req.body.password;
-  const hashedPasswerd = await util.hashPassword(newPassword);
+  const hashedPassword = await util.hashPassword(newPassword);
   try {
     const data = await Admin.update(
-      { email: "pampavandli141@outlook.com" },
-      { password: hashedPasswerd }
+      { email: process.env.ADMIN_EMAIL },
+      { password: hashedPassword }
     );
-    res.status(200).send("Password reset completed successfully");
+    if (data) {
+      res.status(200).send("Password reset completed successfully");
+      await Admin.updateOne({ email: process.env.ADMIN_EMAIL }, { OTP: null });
+    } else {
+      res.status(500).send("Something went wrong, please try again");
+    }
   } catch (error) {
-    res.status(500).send("No admin found");
+    res.status(400).send("No admin found");
   }
 });
 module.exports = Router;

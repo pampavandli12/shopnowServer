@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 // Load .env variables
 require("dotenv").config();
-
+const mongodbUrl = require("./keys/keys");
 // Require controllers
 const AdminController = require("./controllers/admin");
 const User = require("./controllers/user");
@@ -14,9 +14,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const port = process.env.PORT || 3000;
-
 // DB Connections
-mongoose.connect(process.env.MONGODBDEV_URL, (err) => {
+mongoose.connect(mongodbUrl, (err) => {
   if (!err) {
     throw err;
   }

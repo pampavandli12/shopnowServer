@@ -48,7 +48,7 @@ Router.post("/register", async (req, res) => {
         username: req.body.username,
         email: req.body.email,
         password: hasshedPassword,
-        phone: req.body.number,
+        phone: req.body.phone,
         OTP: null,
         cartItems: [],
         orders: [],

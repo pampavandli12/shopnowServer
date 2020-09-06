@@ -16,15 +16,11 @@ app.use(express.urlencoded({ extended: false }));
 const port = process.env.PORT || 3000;
 
 // DB Connections
-mongoose.connect(process.env.MONGODB_URL, (err) => {
+mongoose.connect(process.env.MONGODBDEV_URL, (err) => {
   if (!err) {
     throw err;
   }
   console.log("Successfully connected to DB");
-});
-
-app.get("/", (req, res) => {
-  res.send("<h1>This is from server</h1>");
 });
 app.use("/user", User);
 app.use("/admin", AdminController);

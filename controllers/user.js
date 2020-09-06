@@ -16,7 +16,7 @@ Router.post("/signin", async (req, res) => {
   const email = req.body.email;
   try {
     const data = await User.findOne({ email: req.body.email });
-    if (!data) {
+    if (data) {
       if (await util.comparePassword(req.body.password, data.password)) {
         const payload = { username: data.username, email: data.email };
         const token = util.createAccessToken(payload);
@@ -32,7 +32,7 @@ Router.post("/signin", async (req, res) => {
       res.status(401).send("Invalid credentials");
     }
   } catch (error) {
-    res.status(500).send("something went wrong, please try again");
+    res.status(500).send("Invalid Credentials");
   }
 });
 
@@ -40,7 +40,7 @@ Router.post("/signin", async (req, res) => {
 Router.post("/register", async (req, res) => {
   try {
     const data = await User.findOne({ email: req.body.email });
-    if (!data) {
+    if (data) {
       res.status(400).send("User already exist");
     } else {
       const hasshedPassword = await util.hashPassword(req.body.password);

@@ -9,21 +9,26 @@ const verifyToken = require('../utils/auth').verifyToken;
 const comparePassword = require('../utils/auth').comparePassword;
 
 const passwordAuthenticate = async (token) => {
+  console.log('token here', token);
   if (token.isAdmin) {
     try {
-      const data = await Admin.findOne({ email: email });
-      if (data && (await util.comparePassword(token.password, data.password)))
+      const data = await Admin.findOne({ email: token.email });
+      if (data && (await comparePassword(token.password, data.password))) {
         return true;
-      return false;
+      } else {
+        return false;
+      }
     } catch (error) {
       return false;
     }
   } else {
     try {
-      const data = await User.findOne({ email: req.body.email });
-      if (data && (await util.comparePassword(token.password, data.password)))
+      const data = await User.findOne({ email: token.email });
+      if (data && (await comparePassword(token.password, data.password))) {
         return true;
-      return false;
+      } else {
+        return false;
+      }
     } catch (error) {
       return false;
     }
@@ -38,7 +43,7 @@ const authenticateRefreshToken = async (req, res, next) => {
       const refreshToken = await RefreshToken.findOne({ token: token });
       if (refreshToken) {
         const token = verifyToken(refreshToken.token);
-        const isPasswordVerified = passwordAuthenticate(token);
+        const isPasswordVerified = await passwordAuthenticate(token);
         if (isPasswordVerified) {
           req.body.email = token.email;
           req.body.password = token.password;

@@ -1,47 +1,93 @@
-const express = require("express");
+const express = require('express');
 const Router = express.Router();
-const RefreshToken = require("../models/RefreshToken");
+const RefreshToken = require('../models/RefreshToken');
+const Admin = require('../models/Admin');
+const User = require('../models/User');
 // require modules
-const createAccessToken = require("../utils/auth").createAccessToken;
-const verifyToken = require("../utils/auth").verifyToken;
+const createAccessToken = require('../utils/auth').createAccessToken;
+const verifyToken = require('../utils/auth').verifyToken;
+const comparePassword = require('../utils/auth').comparePassword;
 
-/* ================ GET REFRESH TOKEN =============================== */
-Router.get("/refreshToken", async (req, res) => {
-  const headers = req.headers;
-  if (!headers["authorization"]) {
-    res.status(403).send("UNAUTHORIZED");
-  }
-  const token = headers["authorization"].split(" ")[1];
-  try {
-    const refreshToken = await RefreshToken.findOne({ token: token });
-    if (refreshToken) {
-      const token = verifyToken(refreshToken.token);
-      if (token) {
-        const payload = { username: token.username, email: token.email };
-        const accToken = createAccessToken(payload);
-        res.status(200).send({ token: accToken });
-      } else {
-        res.status(403).send("Access Denied");
-      }
-    } else {
-      res.status(403).send("Invalid token");
+const passwordAuthenticate = async (token) => {
+  if (token.isAdmin) {
+    try {
+      const data = await Admin.findOne({ email: email });
+      if (data && (await util.comparePassword(token.password, data.password)))
+        return true;
+      return false;
+    } catch (error) {
+      return false;
     }
-  } catch (error) {
-    res.status(500).send("Something went wrong, please try again");
+  } else {
+    try {
+      const data = await User.findOne({ email: req.body.email });
+      if (data && (await util.comparePassword(token.password, data.password)))
+        return true;
+      return false;
+    } catch (error) {
+      return false;
+    }
   }
-});
-/* ================== DELETE ACCESS TOKEN =============== */
-Router.delete("/logout", async (req, res) => {
+};
+const authenticateRefreshToken = async (req, res, next) => {
   const headers = req.headers;
-  if (!headers["authorization"]) {
-    res.status(403).send("UNAUTHORIZED");
+  if (!headers['authorization']) return res.status(403).send('UNAUTHORIZED');
+  const token = headers['authorization'].split(' ')[1];
+  if (token) {
+    try {
+      const refreshToken = await RefreshToken.findOne({ token: token });
+      if (refreshToken) {
+        const token = verifyToken(refreshToken.token);
+        const isPasswordVerified = passwordAuthenticate(token);
+        if (isPasswordVerified) {
+          req.body.email = token.email;
+          req.body.password = token.password;
+          if (token.isAdmin) {
+            req.body.isAdmin = token.isAdmin;
+          } else {
+            req.body.username = token.username;
+          }
+          next();
+        } else {
+          res.status(403).send('UNAUTHORIZED');
+        }
+      } else {
+        res.status(403).send('UNAUTHORIZED');
+      }
+    } catch (error) {
+      res.status(500).send('Something went wrong, please try again');
+    }
+  } else {
+    res.status(403).send('UNAUTHORIZED');
   }
-  const token = headers["authorization"].split(" ")[1];
+};
+/* ================ GET REFRESH TOKEN =============================== */
+Router.get('/refreshToken', authenticateRefreshToken, async (req, res) => {
+  const payload = {
+    email: req.body.email,
+    password: req.body.password,
+  };
+  if (req.body.isAdmin) {
+    payload.isAdmin = req.body.isAdmin;
+  } else {
+    payload.username = req.body.username;
+  }
+  const accToken = createAccessToken(payload);
+  res.status(200).send({ token: accToken });
+});
+
+/* ================== DELETE ACCESS TOKEN =============== */
+Router.delete('/logout', async (req, res) => {
+  const headers = req.headers;
+  if (!headers['authorization']) {
+    res.status(403).send('UNAUTHORIZED');
+  }
+  const token = headers['authorization'].split(' ')[1];
   try {
-    await RefreshToken.remove({ token: token });
-    res.status(200).send("success");
+    await RefreshToken.deleteOne({ token: token });
+    res.status(200).send('success');
   } catch (error) {
-    res.status(500).send("Something went wrong, please try again");
+    res.status(500).send('Something went wrong, please try again');
   }
 });
 module.exports = Router;

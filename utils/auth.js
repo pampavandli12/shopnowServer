@@ -1,12 +1,12 @@
 // require modules
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const accessTokenSecretKey = process.env.ACCESS_TOKEN_SECRET_KEY;
 const refreshTokenSecretKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
 /* ============== CREATE ACCESS TOKEN ==================== */
-const createAccessToken = (payload, expirein = "20s") => {
+const createAccessToken = (payload, expirein = '40s') => {
   return jwt.sign(payload, accessTokenSecretKey, { expiresIn: expirein });
 };
 /* ================ CREATE REFRESH TOKEN ================ */
@@ -29,20 +29,19 @@ const verifyToken = (token) => {
 /* ================ VALIDATE TOKEN MIDLEWARE =========== */
 const validateToken = async (req, res, next) => {
   const headers = req.headers;
-  if (!headers["authorization"]) {
-    res.status(403).send("UNAUTHORIZED");
+  if (!headers['authorization']) {
+    return res.status(403).send('UNAUTHORIZED');
   }
-  const reqJwt = headers["authorization"].split(" ")[1];
-  console.log("token is ", reqJwt);
+  const reqJwt = headers['authorization'].split(' ')[1];
   try {
     const token = jwt.verify(reqJwt, accessTokenSecretKey);
     if (token) {
       next();
     } else {
-      res.status(401).send("Token is invalid");
+      res.status(401).send('Token is invalid');
     }
   } catch (error) {
-    res.status(402).send("JWT expired");
+    res.status(402).send('JWT expired');
   }
 };
 module.exports = {

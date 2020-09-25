@@ -22,7 +22,7 @@ Router.post('/signin', async (req, res) => {
           isAdmin: data.isAdmin,
           password: req.body.password,
         };
-        const acctoken = util.createAccessToken(payload, '20s');
+        const acctoken = util.createAccessToken(payload, '15m');
         const reftoken = util.createRefreshToken(payload);
         res.status(200).send({
           message: 'Successfully loged in',

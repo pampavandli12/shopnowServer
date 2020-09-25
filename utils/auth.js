@@ -6,7 +6,7 @@ const accessTokenSecretKey = process.env.ACCESS_TOKEN_SECRET_KEY;
 const refreshTokenSecretKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 
 /* ============== CREATE ACCESS TOKEN ==================== */
-const createAccessToken = (payload, expirein = '40s') => {
+const createAccessToken = (payload, expirein = '4h') => {
   return jwt.sign(payload, accessTokenSecretKey, { expiresIn: expirein });
 };
 /* ================ CREATE REFRESH TOKEN ================ */
@@ -36,12 +36,17 @@ const validateToken = async (req, res, next) => {
   try {
     const token = jwt.verify(reqJwt, accessTokenSecretKey);
     if (token) {
+      req.body.email = token.email;
+      req.body.password = token.password;
+      if (token.isAdmin) {
+        req.body.isAdmin = token.isAdmin;
+      }
       next();
     } else {
       res.status(401).send('Token is invalid');
     }
   } catch (error) {
-    res.status(402).send('JWT expired');
+    res.status(401).send('JWT expired');
   }
 };
 module.exports = {

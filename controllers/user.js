@@ -62,7 +62,11 @@ Router.post('/register', async (req, res) => {
       const user = new User(userData);
       try {
         const respUser = await user.save();
-        const payload = { username: respUser.username, email: respUser.email };
+        const payload = {
+          username: respUser.username,
+          email: respUser.email,
+          password: req.body.password,
+        };
         const token = util.createAccessToken(payload);
         const refToken = util.createRefreshToken(payload);
         res.status(200).send({

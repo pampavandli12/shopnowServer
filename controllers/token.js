@@ -47,7 +47,6 @@ const authenticateRefreshToken = async (req, res, next) => {
       if (refreshToken) {
         const token = verifyToken(refreshToken.token);
         const isPasswordVerified = await passwordAuthenticate(token);
-        console.log('ispasswordverified value', isPasswordVerified);
         if (isPasswordVerified) {
           req.body.email = token.email;
           req.body.password = token.password;
@@ -58,7 +57,6 @@ const authenticateRefreshToken = async (req, res, next) => {
           }
           next();
         } else {
-          console.log('you should remove it');
           await RefreshToken.findOneAndDelete({ token: reqToken });
           // remove refreshtoken from DB change token
           res.status(403).send('UNAUTHORIZED');

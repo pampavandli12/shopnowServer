@@ -10,6 +10,9 @@ const comparePassword = require('../utils/auth').comparePassword;
 
 const passwordAuthenticate = async (token) => {
   console.log('token here', token);
+  if (!token.password) {
+    return false;
+  }
   if (token.isAdmin) {
     try {
       const data = await Admin.findOne({ email: token.email });
@@ -37,13 +40,14 @@ const passwordAuthenticate = async (token) => {
 const authenticateRefreshToken = async (req, res, next) => {
   const headers = req.headers;
   if (!headers['authorization']) return res.status(403).send('UNAUTHORIZED');
-  const token = headers['authorization'].split(' ')[1];
-  if (token) {
+  const reqToken = headers['authorization'].split(' ')[1];
+  if (reqToken) {
     try {
-      const refreshToken = await RefreshToken.findOne({ token: token });
+      const refreshToken = await RefreshToken.findOne({ token: reqToken });
       if (refreshToken) {
         const token = verifyToken(refreshToken.token);
         const isPasswordVerified = await passwordAuthenticate(token);
+        console.log('ispasswordverified value', isPasswordVerified);
         if (isPasswordVerified) {
           req.body.email = token.email;
           req.body.password = token.password;
@@ -54,6 +58,9 @@ const authenticateRefreshToken = async (req, res, next) => {
           }
           next();
         } else {
+          console.log('you should remove it');
+          await RefreshToken.findOneAndDelete({ token: reqToken });
+          // remove refreshtoken from DB change token
           res.status(403).send('UNAUTHORIZED');
         }
       } else {

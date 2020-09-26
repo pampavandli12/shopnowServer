@@ -39,7 +39,7 @@ const passwordAuthenticate = async (token) => {
 };
 const authenticateRefreshToken = async (req, res, next) => {
   const headers = req.headers;
-  if (!headers['authorization']) return res.status(403).send('UNAUTHORIZED');
+  if (!headers['authorization']) return res.status(403).send('Forbidden');
   const reqToken = headers['authorization'].split(' ')[1];
   if (reqToken) {
     try {
@@ -59,16 +59,16 @@ const authenticateRefreshToken = async (req, res, next) => {
         } else {
           await RefreshToken.findOneAndDelete({ token: reqToken });
           // remove refreshtoken from DB change token
-          res.status(403).send('UNAUTHORIZED');
+          res.status(403).send('Forbidden');
         }
       } else {
-        res.status(403).send('UNAUTHORIZED');
+        res.status(403).send('Forbidden');
       }
     } catch (error) {
       res.status(500).send('Something went wrong, please try again');
     }
   } else {
-    res.status(403).send('UNAUTHORIZED');
+    res.status(403).send('Forbidden');
   }
 };
 /* ================ GET REFRESH TOKEN =============================== */
@@ -90,7 +90,7 @@ Router.get('/refreshToken', authenticateRefreshToken, async (req, res) => {
 Router.delete('/logout', async (req, res) => {
   const headers = req.headers;
   if (!headers['authorization']) {
-    res.status(403).send('UNAUTHORIZED');
+    res.status(403).send('Forbidden');
   }
   const token = headers['authorization'].split(' ')[1];
   try {

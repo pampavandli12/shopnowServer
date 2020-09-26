@@ -1,7 +1,7 @@
 // ...Express Validators.
 const { body } = require('express-validator');
 
-/* ================== Parse Validation ======================== */
+/* ================== Parse Error ======================== */
 const parseError = (errors) => {
   let error = '';
   errors.forEach((err) => {
@@ -9,6 +9,7 @@ const parseError = (errors) => {
   });
   return error;
 };
+
 /* ============== Signin validation list */
 const signInValidationList = [
   body('email').isEmail(),
@@ -26,6 +27,8 @@ const signUpValidationList = [
   ...signInValidationList,
   body('phone').isMobilePhone(),
 ];
+
+/* ================ Create Product validation list ================= */
 const createProductValidationList = [
   body('name').isString().isLength({ min: 5, max: 50 }),
   body('title').isString().isLength({ min: 5, max: 50 }),
@@ -40,6 +43,7 @@ const createProductValidationList = [
   body('description').isString().isLength({ min: 5, max: 250 }),
   body('size').isString().isLength({ min: 1, max: 1 }),
 ];
+
 module.exports = {
   parseError,
   signInValidationList,

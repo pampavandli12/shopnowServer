@@ -30,7 +30,7 @@ const verifyToken = (token) => {
 const validateToken = async (req, res, next) => {
   const headers = req.headers;
   if (!headers['authorization']) {
-    return res.status(403).send('UNAUTHORIZED');
+    return res.status(403).send('Forbidden');
   }
   const reqJwt = headers['authorization'].split(' ')[1];
   try {
@@ -43,10 +43,10 @@ const validateToken = async (req, res, next) => {
       }
       next();
     } else {
-      res.status(401).send('Token is invalid');
+      res.status(401).send('UNAUTHORIZED');
     }
   } catch (error) {
-    res.status(401).send('JWT expired');
+    res.status(401).send('UNAUTHORIZED');
   }
 };
 module.exports = {

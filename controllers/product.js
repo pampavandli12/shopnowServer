@@ -25,7 +25,7 @@ const checkAdmin = (req, res, next) => {
   }
   next();
 };
-
+/* =========== Create product ========================= */
 Router.post('/', Validation.createProductValidationList, async (req, res) => {
   // Check for errors during data validation
   const errors = validationResult(req);
@@ -54,6 +54,7 @@ Router.post('/', Validation.createProductValidationList, async (req, res) => {
     res.status(500).send(error);
   }
 });
+/* ===================== Get products =================== */
 Router.get('/', async (req, res) => {
   try {
     const products = await Product.find();
@@ -62,6 +63,7 @@ Router.get('/', async (req, res) => {
     res.status(500).send('Something went wrong, please try again');
   }
 });
+/* ============== Delete product =================== */
 Router.delete('/:id', async (req, res) => {
   const id = req.params.id;
   try {
@@ -75,14 +77,34 @@ Router.delete('/:id', async (req, res) => {
     res.status(500).send('Something went wrong, please try again');
   }
 });
-Router.put('/', (req, res) => {
-  // still pending
-  const user = {
-    email: req.body.email,
-    password: req.body.password,
-    message: 'update product',
+
+/* ================= Update product ======================== */
+Router.put('/:id', Validation.createProductValidationList, async (req, res) => {
+  // Check for errors during data validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = errors.errors;
+    const errorMsg = Validation.parseError(error);
+    return res.status(400).json(errorMsg);
+  }
+  const data = {
+    name: req.body.name,
+    title: req.body.title,
+    price: req.body.price,
+    description: req.body.description,
+    size: req.body.size,
+    attachments: req.body.attachments,
   };
-  res.status(200).send(user);
+  try {
+    const response = await Product.findByIdAndUpdate(req.params.id, data);
+    if (response) {
+      res.status(200).send('Product updated successfully');
+    } else {
+      res.status(500).send('Something went wrong, please try again');
+    }
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 /* ================== Attachment Upload ========================= */
 Router.post('/upload', upload.array('files'), (req, res) => {

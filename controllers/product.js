@@ -1,7 +1,11 @@
 const Router = require('express').Router();
 const Product = require('../models/Product');
 var multer = require('multer');
+// ...Express Validators.
+const { validationResult } = require('express-validator');
 
+// Custom validation
+const Validation = require('../utils/validation');
 /* ================= Configure Multer file storage ========================== */
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -22,7 +26,14 @@ const checkAdmin = (req, res, next) => {
   next();
 };
 
-Router.post('/', async (req, res) => {
+Router.post('/', Validation.createProductValidationList, async (req, res) => {
+  // Check for errors during data validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = errors.errors;
+    const errorMsg = Validation.parseError(error);
+    return res.status(400).json(errorMsg);
+  }
   const data = {
     name: req.body.name,
     title: req.body.title,
@@ -40,7 +51,7 @@ Router.post('/', async (req, res) => {
       res.status(500).send('Something went wrong, please try again');
     }
   } catch (error) {
-    res.status(500).send('Something went wrong, please try again');
+    res.status(500).send(error);
   }
 });
 Router.get('/', async (req, res) => {
@@ -51,8 +62,8 @@ Router.get('/', async (req, res) => {
     res.status(500).send('Something went wrong, please try again');
   }
 });
-Router.delete('/', async (req, res) => {
-  const id = req.body.id;
+Router.delete('/:id', async (req, res) => {
+  const id = req.params.id;
   try {
     const response = await Product.findByIdAndDelete(id);
     if (response) {

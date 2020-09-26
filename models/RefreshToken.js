@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
 const refreshToken = new Schema({
-  token: String,
+  token: { type: String },
 });
 
-module.exports = mongoose.model("RefreshToken", refreshToken);
+module.exports = mongoose.model('RefreshToken', refreshToken);

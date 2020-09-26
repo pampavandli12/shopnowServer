@@ -4,13 +4,24 @@ const Router = express.Router();
 /* =============== IMPORT MODELS ================ */
 const Admin = require('../models/Admin');
 const RefreshToken = require('../models/RefreshToken');
+// ...Express Validators.
+const { validationResult } = require('express-validator');
 
+// Custom validation
+const Validation = require('../utils/validation');
 /* ================== IMPORT CUSTOM MODULES =================== */
 const util = require('../utils/auth');
 const sendOtpToMobile = require('../utils/otpsender').sendOtpToMobile;
 
 /* =================== SIGNIN ENDPOINT ============================ */
-Router.post('/signin', async (req, res) => {
+Router.post('/signin', Validation.signInValidationList, async (req, res) => {
+  // Check for errors during data validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = errors.errors;
+    const errorMsg = Validation.parseError(error);
+    return res.status(400).json(errorMsg);
+  }
   const email = req.body.email;
   try {
     const data = await Admin.findOne({ email: email });

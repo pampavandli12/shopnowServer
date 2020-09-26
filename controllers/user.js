@@ -3,6 +3,11 @@ const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const Router = express.Router();
 
+// ...Express Validators.
+const { validationResult } = require('express-validator');
+
+// Custom validation
+const Validation = require('../utils/validation');
 /* ================= IMPORT CUSTOM MODULES =============== */
 const util = require('../utils/auth');
 const sendOTPEmail = require('../utils/otpsender').sendOTPEmail;
@@ -13,8 +18,16 @@ const saveRefreshToken = async (token) => {
   const refreshToken = new RefreshToken({ token: token });
   await refreshToken.save();
 };
+
 /* ======================= SIGNIN ENDPOINT =========================== */
-Router.post('/signin', async (req, res) => {
+Router.post('/signin', Validation.signInValidationList, async (req, res) => {
+  // Check for errors during data validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = errors.errors;
+    const errorMsg = Validation.parseError(error);
+    return res.status(400).json(errorMsg);
+  }
   const email = req.body.email;
   try {
     const data = await User.findOne({ email: req.body.email });
@@ -43,7 +56,14 @@ Router.post('/signin', async (req, res) => {
 });
 
 /* ======================= REGISTER ENDPOINT =========================== */
-Router.post('/register', async (req, res) => {
+Router.post('/register', Validation.signUpValidationList, async (req, res) => {
+  // Check for errors during data validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = errors.errors;
+    const errorMsg = Validation.parseError(error);
+    return res.status(400).json(errorMsg);
+  }
   try {
     const data = await User.findOne({ email: req.body.email });
     if (data) {
@@ -83,7 +103,14 @@ Router.post('/register', async (req, res) => {
 });
 
 /* =============== SEND OTP FOR RESET PASSWORD =============================== */
-Router.post('/sendotp', async (req, res) => {
+Router.post('/sendotp', Validation.emailValidation, async (req, res) => {
+  // Check for errors during data validation
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = errors.errors;
+    const errorMsg = Validation.parseError(error);
+    return res.status(400).json(errorMsg);
+  }
   try {
     const data = User.findOne({ email: req.body.email });
     if (data) {

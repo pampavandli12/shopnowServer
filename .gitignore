@@ -105,3 +105,4 @@ dist
 
 # .env file
 .env
+*.jpg

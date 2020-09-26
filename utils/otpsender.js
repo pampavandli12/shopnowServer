@@ -4,10 +4,10 @@ const accountSid = process.env.ACCOUNT_SID;
 const authToken = process.env.AUTH_TOKEN;
 const adminNumber = process.env.ADMIN_NUMBER;
 
-var nodemailer = require("nodemailer");
-const client = require("twilio")(accountSid, authToken);
+var nodemailer = require('nodemailer');
+const client = require('twilio')(accountSid, authToken);
 var transporter = nodemailer.createTransport({
-  service: "outlook",
+  service: 'outlook',
   auth: {
     user: process.env.ADMIN_EMAIL,
     pass: process.env.ADMIN_EMAIL_PASSWORD,
@@ -18,13 +18,14 @@ const sendOTPEmail = (email, otp, cb) => {
   var mailOptions = {
     from: process.env.ADMIN_EMAIL,
     to: email,
-    subject: "OTP for your password reset",
-    text: `Hi,
-    You requested to reset your password, 
-    this is the otp for password reset: ${otp}
-    Please verify otp to complete the process
-    Regards,
-    shopNow`,
+    subject: 'OTP for your password reset',
+    html: `<p>Hi, <br />
+     You requested to reset your password, 
+     this is the OTP for password reset: <b>${otp}</b>.<br />
+     Please verify otp to complete the process.<br />
+     This OTP will be valid for 30 minutes.</p>
+     <div>Regards</div>
+     <div>ShopNow</div>`,
   };
   transporter.sendMail(mailOptions, cb);
 };

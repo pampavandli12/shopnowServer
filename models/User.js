@@ -8,6 +8,7 @@ const userSchema = new Schema({
   phone: { type: Number, required: true },
   OTP: { type: Number },
   cartItems: { type: Array },
+  cartPrice: { type: Number },
   orders: { type: Array },
 });
 module.exports = mongoose.model('User', userSchema);

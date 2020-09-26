@@ -112,7 +112,7 @@ Router.post('/sendotp', Validation.emailValidation, async (req, res) => {
     return res.status(400).json(errorMsg);
   }
   try {
-    const data = User.findOne({ email: req.body.email });
+    const data = await User.findOne({ email: req.body.email });
     if (data) {
       let OTP = Math.floor(100000 + Math.random() * 900000);
       sendOTPEmail(req.body.email, OTP, (err, info) => {
